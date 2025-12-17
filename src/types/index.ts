@@ -12,6 +12,8 @@ export type {
   RemoveFileResult,
   ReadFileInput,
   ReadFileResult,
+  GetFileDetailsInput,
+  GetFileDetailsResult,
   ListFilesInput,
   ListFilesResult,
   CreateBranchInput,
