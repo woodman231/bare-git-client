@@ -6,6 +6,8 @@ import type {
   AddPlaceholderInput,
   RemoveFileInput,
   RemoveFileResult,
+  RemoveDirectoryInput,
+  RemoveDirectoryResult,
   ReadFileInput,
   ReadFileResult,
   GetFileDetailsInput,
@@ -37,6 +39,7 @@ export interface IBareGitClient {
   addPlaceholder(input: AddPlaceholderInput): Promise<AddFileResult>;
   createDirectory(input: AddPlaceholderInput): Promise<AddFileResult>;
   removeFile(input: RemoveFileInput): Promise<RemoveFileResult>;
+  removeDirectory(input: RemoveDirectoryInput): Promise<RemoveDirectoryResult>;
   readFile(input: ReadFileInput): Promise<ReadFileResult>;
   getFileDetails(input: GetFileDetailsInput): Promise<GetFileDetailsResult>;
   listFiles(input?: ListFilesInput): Promise<ListFilesResult>;

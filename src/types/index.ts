@@ -10,6 +10,8 @@ export type {
   AddFileResult,
   RemoveFileInput,
   RemoveFileResult,
+  RemoveDirectoryInput,
+  RemoveDirectoryResult,
   ReadFileInput,
   ReadFileResult,
   GetFileDetailsInput,

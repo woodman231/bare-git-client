@@ -114,6 +114,26 @@ export const RemoveFileResultSchema = z.object({
 export type RemoveFileResult = z.infer<typeof RemoveFileResultSchema>;
 
 /**
+ * Schema for removing a directory
+ */
+export const RemoveDirectoryInputSchema = z.object({
+  ref: ReferenceSchema,
+  directoryPath: z.string().min(1, 'Directory path is required'),
+  commitMessage: z.string().optional(),
+  author: AuthorSchema.optional(),
+});
+
+export type RemoveDirectoryInput = z.infer<typeof RemoveDirectoryInputSchema>;
+
+export const RemoveDirectoryResultSchema = z.object({
+  commitSha: z.string(),
+  treeSha: z.string().nullable(),
+  filesRemoved: z.number().int().nonnegative(),
+});
+
+export type RemoveDirectoryResult = z.infer<typeof RemoveDirectoryResultSchema>;
+
+/**
  * Schema for reading a file
  */
 export const ReadFileInputSchema = z.object({

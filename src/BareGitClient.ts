@@ -7,6 +7,8 @@ import type {
   AddPlaceholderInput,
   RemoveFileInput,
   RemoveFileResult,
+  RemoveDirectoryInput,
+  RemoveDirectoryResult,
   ReadFileInput,
   ReadFileResult,
   GetFileDetailsInput,
@@ -28,6 +30,7 @@ import { createBare as createBareOp } from './operations/create-bare.js';
 import { addFile as addFileOp } from './operations/add-file.js';
 import { addPlaceholder as addPlaceholderOp } from './operations/add-placeholder.js';
 import { removeFile as removeFileOp } from './operations/remove-file.js';
+import { removeDirectory as removeDirectoryOp } from './operations/remove-directory.js';
 import { readFile as readFileOp } from './operations/read-file.js';
 import { getFileDetails as getFileDetailsOp } from './operations/get-file-details.js';
 import { listFiles as listFilesOp } from './operations/list-files.js';
@@ -193,6 +196,37 @@ export class BareGitClient implements IBareGitClient {
    */
   async removeFile(input: RemoveFileInput): Promise<RemoveFileResult> {
     return removeFileOp(this, input);
+  }
+
+  /**
+   * Remove a directory and all its contents from a branch
+   * 
+   * This method removes an entire directory recursively, including all files and
+   * subdirectories within it. Empty parent directories are automatically cleaned up
+   * after removal (similar to `removeFile`).
+   * 
+   * **Note:** This method implements concurrency control. If the branch is modified
+   * by another operation between read and write, it will throw a `ConcurrentModificationError`.
+   * 
+   * @param input - Directory path and target branch
+   * @returns Commit information and count of files removed
+   * @throws {BareGitClientError} With code INVALID_PATH if path is root directory, contains invalid segments (`.` or `..`), or points to a file instead of a directory
+   * @throws {BareGitClientError} With code NOT_FOUND if directory does not exist
+   * @throws {BareGitClientError} With code CONCURRENT_MODIFICATION if branch was modified by another operation
+   * 
+   * @example
+   * ```typescript
+   * const result = await client.removeDirectory({
+   *   ref: 'main',
+   *   directoryPath: 'src/old-feature',
+   *   commitMessage: 'Remove deprecated feature'
+   * });
+   * console.log(`Removed ${result.filesRemoved} files`);
+   * // Output: Removed 12 files
+   * ```
+   */
+  async removeDirectory(input: RemoveDirectoryInput): Promise<RemoveDirectoryResult> {
+    return removeDirectoryOp(this, input);
   }
 
   /**

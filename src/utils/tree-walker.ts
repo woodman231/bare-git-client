@@ -204,3 +204,91 @@ export async function readTreeEntries(
   const entries = filterTreeEntries(result.tree);
   return new Map(entries.map(e => [e.path, e]));
 }
+
+/**
+ * Recursively count all blob files in a tree
+ * Returns the total number of files (blobs) in the tree and all subtrees
+ */
+export async function countFilesInTree(
+  gitdir: string,
+  treeSha: string
+): Promise<number> {
+  const result = await git.readTree({ fs, gitdir, oid: treeSha });
+  const entries = filterTreeEntries(result.tree);
+  
+  let count = 0;
+  
+  for (const entry of entries) {
+    if (entry.type === 'blob') {
+      count++;
+    } else if (entry.type === 'tree') {
+      // Recursively count files in subtree
+      count += await countFilesInTree(gitdir, entry.oid);
+    }
+  }
+  
+  return count;
+}
+
+/**
+ * Recursively remove a directory from a tree structure
+ * Returns null if tree becomes empty (signals parent to prune)
+ */
+export async function removeDirectoryFromTree(
+  gitdir: string,
+  parentTreeSha: string | null,
+  pathParts: string[]
+): Promise<string | null> {
+  if (!parentTreeSha) {
+    throw BareGitClientError.notFound('Directory', 'Parent tree does not exist');
+  }
+
+  const [currentPart, ...remainingParts] = pathParts;
+
+  // Read existing entries
+  const result = await git.readTree({ fs, gitdir, oid: parentTreeSha });
+  let entries: TreeEntry[] = filterTreeEntries(result.tree);
+
+  if (remainingParts.length === 0) {
+    // Base case: remove the directory
+    const dirExists = entries.some(e => e.path === currentPart);
+    if (!dirExists) {
+      throw BareGitClientError.notFound('Directory', currentPart);
+    }
+
+    entries = entries.filter(e => e.path !== currentPart);
+  } else {
+    // Recursive case: descend into subtree
+    const existingEntry = entries.find(e => e.path === currentPart);
+    if (!existingEntry || existingEntry.type !== 'tree') {
+      throw BareGitClientError.notFound('Path', currentPart);
+    }
+
+    const newSubTreeSha = await removeDirectoryFromTree(
+      gitdir,
+      existingEntry.oid,
+      remainingParts
+    );
+
+    // Remove existing entry
+    entries = entries.filter(e => e.path !== currentPart);
+
+    // Add back the subtree if it's not empty
+    if (newSubTreeSha !== null) {
+      entries.push({
+        mode: '040000',
+        path: currentPart!,
+        oid: newSubTreeSha,
+        type: 'tree',
+      });
+    }
+  }
+
+  // If tree is now empty, return null to signal parent to prune
+  if (entries.length === 0) {
+    return null;
+  }
+
+  // Write the modified tree
+  return await git.writeTree({ fs, gitdir, tree: entries });
+}

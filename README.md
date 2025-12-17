@@ -119,6 +119,29 @@ await client.addFile({
 
 **Note:** This method implements concurrency control. If the branch is modified by another operation between read and write, it will throw a `CONCURRENCY_ERROR`. Retry logic is the responsibility of the developer.
 
+#### `addPlaceholder(input)` / `createDirectory(input)`
+
+Add a placeholder file to create a directory structure. `createDirectory()` is an alias for `addPlaceholder()`.
+
+```typescript
+await client.addPlaceholder({
+  ref: 'main',                      // Branch name or ref
+  directoryPath: 'src/components',
+  placeholderFileName: '.gitkeep',  // Optional, defaults to '.gitkeep'
+  commitMessage: 'Create components directory',  // Optional
+  author: { ... }                   // Optional
+});
+// Returns: { commitSha, treeSha, blobSha }
+
+// Alternative using createDirectory alias
+await client.createDirectory({
+  ref: 'main',
+  directoryPath: 'assets/images'
+});
+```
+
+**Note:** Git cannot natively store empty directories. This method creates a placeholder file (`.gitkeep` by default) to preserve the directory structure. The placeholder includes a comment explaining it can be safely deleted once other files are added to the directory.
+
 #### `removeFile(input)`
 
 Remove a file and automatically clean up empty parent directories.
@@ -132,6 +155,23 @@ await client.removeFile({
 });
 // Returns: { commitSha, treeSha }
 ```
+
+#### `removeDirectory(input)`
+
+Remove a directory and all its contents from a branch.
+
+```typescript
+const result = await client.removeDirectory({
+  ref: 'main',
+  directoryPath: 'src/old-feature',
+  commitMessage: 'Remove deprecated feature',  // Optional
+  author: { ... }                              // Optional
+});
+console.log(`Removed ${result.filesRemoved} files`);
+// Returns: { commitSha, treeSha, filesRemoved }
+```
+
+**Note:** This method implements concurrency control. If the branch is modified by another operation between read and write, it will throw a `CONCURRENCY_ERROR`. Retry logic is the responsibility of the developer. The method automatically cleans up empty parent directories after removal.
 
 #### `readFile(input)`
 
@@ -147,6 +187,29 @@ const result = await client.readFile({
 ```
 
 **Binary Detection:** When `encoding` is set to `'auto'` (default), the library automatically detects binary files and returns a Buffer for binary content or a string for text content.
+
+#### `getFileDetails(input)`
+
+Get metadata details about a file or directory without reading its content.
+
+```typescript
+const details = await client.getFileDetails({
+  ref: 'main',              // Optional, defaults to 'HEAD'
+  filePath: 'src/index.ts'
+});
+// Returns: { mode, oid, type }
+
+// Check if path is a file or directory
+if (details.type === 'blob') {
+  console.log('It\'s a file');
+  const content = await client.readFile({ ref: 'main', filePath: 'src/index.ts' });
+} else if (details.type === 'tree') {
+  console.log('It\'s a directory');
+  const files = await client.listFiles({ ref: 'main', folderPath: 'src/index.ts' });
+}
+```
+
+**Use Case:** This is a lightweight operation for checking if a path exists and determining whether it's a file or directory before calling `readFile()` or `listFiles()`.
 
 #### `listFiles(input?)`
 
