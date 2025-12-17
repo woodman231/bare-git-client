@@ -56,7 +56,15 @@ export async function listFiles(
           type: entry.type as 'blob' | 'tree',
           oid: entry.oid,
           path: entry.path,
-        })),
+        }))
+        .sort((a, b) => {
+          // Group trees first, then blobs
+          if (a.type !== b.type) {
+            return a.type === 'tree' ? -1 : 1;
+          }
+          // Sort alphabetically within each group
+          return a.path.localeCompare(b.path);
+        }),
     };
   } catch (error) {
     if (error instanceof BareGitClientError) {
