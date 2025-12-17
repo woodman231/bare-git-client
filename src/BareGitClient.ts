@@ -4,6 +4,7 @@ import type {
   CreateBareResult,
   AddFileInput,
   AddFileResult,
+  AddPlaceholderInput,
   RemoveFileInput,
   RemoveFileResult,
   ReadFileInput,
@@ -23,6 +24,7 @@ import type {
 import { BareGitClientError } from './errors/BareGitClientError.js';
 import { createBare as createBareOp } from './operations/create-bare.js';
 import { addFile as addFileOp } from './operations/add-file.js';
+import { addPlaceholder as addPlaceholderOp } from './operations/add-placeholder.js';
 import { removeFile as removeFileOp } from './operations/remove-file.js';
 import { readFile as readFileOp } from './operations/read-file.js';
 import { listFiles as listFilesOp } from './operations/list-files.js';
@@ -121,6 +123,54 @@ export class BareGitClient implements IBareGitClient {
    */
   async addFile(input: AddFileInput): Promise<AddFileResult> {
     return addFileOp(this, input);
+  }
+
+  /**
+   * Add a placeholder file to create a directory structure
+   * 
+   * **Important:** Git cannot store empty directories. This method creates a placeholder
+   * file (by default `.gitkeep`) to force the directory structure to exist in the repository.
+   * The placeholder file contains a comment explaining that it's safe to delete once other
+   * files exist in the directory.
+   * 
+   * @param input - Directory path, optional placeholder filename, and target branch
+   * @returns Commit and tree information
+   * 
+   * @example
+   * ```typescript
+   * await client.addPlaceholder({
+   *   ref: 'main',
+   *   directoryPath: 'src/components',
+   *   placeholderFileName: '.gitkeep', // optional, defaults to '.gitkeep'
+   *   commitMessage: 'Create components directory'
+   * });
+   * ```
+   */
+  async addPlaceholder(input: AddPlaceholderInput): Promise<AddFileResult> {
+    return addPlaceholderOp(this, input);
+  }
+
+  /**
+   * Create a directory structure in the repository
+   * 
+   * **Note:** This is an alias for `addPlaceholder()`. Git cannot natively store empty
+   * directories, so this method creates a placeholder file (`.gitkeep` by default) to
+   * preserve the directory structure. The placeholder file includes a comment explaining
+   * it can be safely deleted once other files are added to the directory.
+   * 
+   * @param input - Directory path, optional placeholder filename, and target branch
+   * @returns Commit and tree information
+   * 
+   * @example
+   * ```typescript
+   * await client.createDirectory({
+   *   ref: 'main',
+   *   directoryPath: 'assets/images'
+   * });
+   * ```
+   */
+  async createDirectory(input: AddPlaceholderInput): Promise<AddFileResult> {
+    return this.addPlaceholder(input);
   }
 
   /**

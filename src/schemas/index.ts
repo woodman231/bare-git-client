@@ -82,6 +82,19 @@ export const AddFileResultSchema = z.object({
 export type AddFileResult = z.infer<typeof AddFileResultSchema>;
 
 /**
+ * Schema for adding a placeholder file to create a directory
+ */
+export const AddPlaceholderInputSchema = z.object({
+  ref: ReferenceSchema,
+  directoryPath: z.string().min(1, 'Directory path is required'),
+  placeholderFileName: z.string().default('.gitkeep'),
+  commitMessage: z.string().optional(),
+  author: AuthorSchema.optional(),
+});
+
+export type AddPlaceholderInput = z.infer<typeof AddPlaceholderInputSchema>;
+
+/**
  * Schema for removing a file
  */
 export const RemoveFileInputSchema = z.object({
