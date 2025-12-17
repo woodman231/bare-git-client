@@ -133,6 +133,24 @@ export const ReadFileResultSchema = z.object({
 export type ReadFileResult = z.infer<typeof ReadFileResultSchema>;
 
 /**
+ * Schema for getting file details
+ */
+export const GetFileDetailsInputSchema = z.object({
+  ref: ReferenceSchema.default('HEAD'),
+  filePath: z.string().min(1, 'File path is required'),
+});
+
+export type GetFileDetailsInput = z.infer<typeof GetFileDetailsInputSchema>;
+
+export const GetFileDetailsResultSchema = z.object({
+  mode: z.string(),
+  oid: z.string(),
+  type: z.enum(['blob', 'tree']),
+});
+
+export type GetFileDetailsResult = z.infer<typeof GetFileDetailsResultSchema>;
+
+/**
  * Schema for listing files
  */
 export const ListFilesInputSchema = z.object({

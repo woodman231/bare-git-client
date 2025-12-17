@@ -9,6 +9,8 @@ import type {
   RemoveFileResult,
   ReadFileInput,
   ReadFileResult,
+  GetFileDetailsInput,
+  GetFileDetailsResult,
   ListFilesInput,
   ListFilesResult,
   CreateBranchInput,
@@ -27,6 +29,7 @@ import { addFile as addFileOp } from './operations/add-file.js';
 import { addPlaceholder as addPlaceholderOp } from './operations/add-placeholder.js';
 import { removeFile as removeFileOp } from './operations/remove-file.js';
 import { readFile as readFileOp } from './operations/read-file.js';
+import { getFileDetails as getFileDetailsOp } from './operations/get-file-details.js';
 import { listFiles as listFilesOp } from './operations/list-files.js';
 import { createBranch as createBranchOp } from './operations/create-branch.js';
 import { removeBranch as removeBranchOp } from './operations/remove-branch.js';
@@ -210,6 +213,42 @@ export class BareGitClient implements IBareGitClient {
    */
   async readFile(input: ReadFileInput): Promise<ReadFileResult> {
     return readFileOp(this, input);
+  }
+
+  /**
+   * Get metadata details about a file or directory without reading its content
+   * 
+   * This is a lightweight operation that returns the mode, OID (SHA), and type
+   * (blob or tree) of a path. Use this to check if a path exists and determine
+   * whether it's a file or directory before calling `readFile` or `listFiles`.
+   * 
+   * @param input - File path and reference
+   * @returns File metadata (mode, oid, type)
+   * 
+   * @example
+   * ```typescript
+   * const details = await client.getFileDetails({
+   *   ref: 'main',
+   *   filePath: 'src/index.ts'
+   * });
+   * 
+   * if (details.type === 'blob') {
+   *   // It's a file, safe to read
+   *   const content = await client.readFile({
+   *     ref: 'main',
+   *     filePath: 'src/index.ts'
+   *   });
+   * } else {
+   *   // It's a directory, list its contents
+   *   const files = await client.listFiles({
+   *     ref: 'main',
+   *     folderPath: 'src/index.ts'
+   *   });
+   * }
+   * ```
+   */
+  async getFileDetails(input: GetFileDetailsInput): Promise<GetFileDetailsResult> {
+    return getFileDetailsOp(this, input);
   }
 
   /**
