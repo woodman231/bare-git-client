@@ -4,6 +4,8 @@ import type {
   CreateBareResult,
   AddFileInput,
   AddFileResult,
+  AddManyFilesInput,
+  AddManyFilesResult,
   AddPlaceholderInput,
   RemoveFileInput,
   RemoveFileResult,
@@ -28,6 +30,7 @@ import type {
 import { BareGitClientError } from './errors/BareGitClientError.js';
 import { createBare as createBareOp } from './operations/create-bare.js';
 import { addFile as addFileOp } from './operations/add-file.js';
+import { addManyFiles as addManyFilesOp } from './operations/add-many-files.js';
 import { addPlaceholder as addPlaceholderOp } from './operations/add-placeholder.js';
 import { removeFile as removeFileOp } from './operations/remove-file.js';
 import { removeDirectory as removeDirectoryOp } from './operations/remove-directory.js';
@@ -129,6 +132,34 @@ export class BareGitClient implements IBareGitClient {
    */
   async addFile(input: AddFileInput): Promise<AddFileResult> {
     return addFileOp(this, input);
+  }
+
+  /**
+   * Add or update multiple files in a single commit
+   * 
+   * This method efficiently adds multiple files in one commit by parallelizing
+   * blob creation and sequentially updating the tree structure. All files are
+   * processed atomically - if any operation fails, no changes are committed.
+   * 
+   * @param input - Array of files with paths and content, plus shared commit metadata
+   * @returns Commit information and blob SHAs for each file
+   * 
+   * @example
+   * ```typescript
+   * const result = await client.addManyFiles({
+   *   ref: 'main',
+   *   files: [
+   *     { filePath: 'src/index.ts', content: 'export * from "./lib";' },
+   *     { filePath: 'src/lib.ts', content: 'export const lib = () => {};' },
+   *     { filePath: 'README.md', content: '# My Project' }
+   *   ],
+   *   commitMessage: 'Initial project structure'
+   * });
+   * console.log(`Created commit ${result.commitSha} with ${result.blobShas.length} files`);
+   * ```
+   */
+  async addManyFiles(input: AddManyFilesInput): Promise<AddManyFilesResult> {
+    return addManyFilesOp(this, input);
   }
 
   /**

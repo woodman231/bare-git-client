@@ -82,6 +82,32 @@ export const AddFileResultSchema = z.object({
 export type AddFileResult = z.infer<typeof AddFileResultSchema>;
 
 /**
+ * Schema for adding many files in a single commit
+ */
+export const AddManyFilesInputSchema = z.object({
+  ref: ReferenceSchema,
+  files: z.array(z.object({
+    filePath: z.string().min(1, 'File path is required'),
+    content: z.union([z.string(), z.instanceof(Buffer), z.instanceof(Uint8Array)]),
+  })).min(1, 'At least one file is required'),
+  commitMessage: z.string().optional(),
+  author: AuthorSchema.optional(),
+});
+
+export type AddManyFilesInput = z.infer<typeof AddManyFilesInputSchema>;
+
+export const AddManyFilesResultSchema = z.object({
+  commitSha: z.string(),
+  treeSha: z.string(),
+  blobShas: z.array(z.object({
+    filePath: z.string(),
+    blobSha: z.string(),
+  })),
+});
+
+export type AddManyFilesResult = z.infer<typeof AddManyFilesResultSchema>;
+
+/**
  * Schema for adding a placeholder file to create a directory
  */
 export const AddPlaceholderInputSchema = z.object({
