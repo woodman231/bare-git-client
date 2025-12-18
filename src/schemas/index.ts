@@ -140,6 +140,26 @@ export const RemoveFileResultSchema = z.object({
 export type RemoveFileResult = z.infer<typeof RemoveFileResultSchema>;
 
 /**
+ * Schema for removing many files in a single commit
+ */
+export const RemoveManyFilesInputSchema = z.object({
+  ref: ReferenceSchema,
+  filePaths: z.array(z.string().min(1, 'File path is required')).min(1, 'At least one file path is required'),
+  commitMessage: z.string().optional(),
+  author: AuthorSchema.optional(),
+});
+
+export type RemoveManyFilesInput = z.infer<typeof RemoveManyFilesInputSchema>;
+
+export const RemoveManyFilesResultSchema = z.object({
+  commitSha: z.string(),
+  treeSha: z.string().nullable(),
+  filesRemoved: z.number().int().nonnegative(),
+});
+
+export type RemoveManyFilesResult = z.infer<typeof RemoveManyFilesResultSchema>;
+
+/**
  * Schema for removing a directory
  */
 export const RemoveDirectoryInputSchema = z.object({

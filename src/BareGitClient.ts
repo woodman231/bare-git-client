@@ -9,6 +9,8 @@ import type {
   AddPlaceholderInput,
   RemoveFileInput,
   RemoveFileResult,
+  RemoveManyFilesInput,
+  RemoveManyFilesResult,
   RemoveDirectoryInput,
   RemoveDirectoryResult,
   ReadFileInput,
@@ -33,6 +35,7 @@ import { addFile as addFileOp } from './operations/add-file.js';
 import { addManyFiles as addManyFilesOp } from './operations/add-many-files.js';
 import { addPlaceholder as addPlaceholderOp } from './operations/add-placeholder.js';
 import { removeFile as removeFileOp } from './operations/remove-file.js';
+import { removeManyFiles as removeManyFilesOp } from './operations/remove-many-files.js';
 import { removeDirectory as removeDirectoryOp } from './operations/remove-directory.js';
 import { readFile as readFileOp } from './operations/read-file.js';
 import { getFileDetails as getFileDetailsOp } from './operations/get-file-details.js';
@@ -227,6 +230,39 @@ export class BareGitClient implements IBareGitClient {
    */
   async removeFile(input: RemoveFileInput): Promise<RemoveFileResult> {
     return removeFileOp(this, input);
+  }
+
+  /**
+   * Remove multiple files in a single commit
+   * 
+   * This method efficiently removes multiple files in one commit by sequentially
+   * updating the tree structure. All files are processed atomically - if any
+   * operation fails (e.g., file not found), the entire operation fails and no
+   * changes are committed.
+   * 
+   * **Important**: The method validates that no duplicate paths are provided and
+   * will throw an error if duplicates are detected. If the tree becomes empty
+   * during removal, an empty tree commit is created.
+   * 
+   * @param input - Array of file paths to remove, plus shared commit metadata
+   * @returns Commit information and count of files removed
+   * 
+   * @example
+   * ```typescript
+   * const result = await client.removeManyFiles({
+   *   ref: 'main',
+   *   filePaths: [
+   *     'old-feature/index.ts',
+   *     'old-feature/utils.ts',
+   *     'deprecated.md'
+   *   ],
+   *   commitMessage: 'Clean up old files'
+   * });
+   * console.log(`Removed ${result.filesRemoved} files in commit ${result.commitSha}`);
+   * ```
+   */
+  async removeManyFiles(input: RemoveManyFilesInput): Promise<RemoveManyFilesResult> {
+    return removeManyFilesOp(this, input);
   }
 
   /**
